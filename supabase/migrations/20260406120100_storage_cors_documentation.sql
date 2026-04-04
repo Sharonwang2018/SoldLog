@@ -1,0 +1,23 @@
+-- =============================================================================
+-- STORAGE + POSTER CORS — read this in the SQL Editor (nothing here changes RLS)
+-- =============================================================================
+-- Supabase does NOT expose Storage GET/CORS allowlists as rows you can INSERT.
+-- Public bucket objects are usually served with permissive CORS; if html-to-image
+-- fails with a "tainted canvas" / CORS error on property photos:
+--
+-- 1) Supabase Dashboard → Project Settings → API
+--    • Site URL: your production origin (e.g. https://soldlog.com)
+--    • Additional Redirect URLs: add http://localhost:3000 and production URL
+--    (Some projects also surface "Allowed request origins" / CORS — add the same.)
+--
+-- 2) Ensure listing photos use the PUBLIC object URL:
+--    .../storage/v1/object/public/property-images/...
+--    (Private URLs require auth headers; canvas + crossOrigin="anonymous" will fail.)
+--
+-- 3) Admin / server scripts: use the service role or signed URLs — never the anon
+--    key in the browser for verification-docs.
+--
+-- This file is a no-op migration so the notes live in repo history next to SQL.
+-- =============================================================================
+
+SELECT 1 AS soldlog_cors_documentation_ok;
