@@ -1,6 +1,6 @@
 import type { SoldListing } from "@/lib/types/public-profile";
 
-/** Sum of `finalPrice` for listings where `verified` is true */
+/** Sum of `finalPrice` for listings flagged with a closing doc on file (`verified` in API). */
 export function sumVerifiedVolumeUsd(listings: SoldListing[]): number {
   return listings.filter((l) => l.verified).reduce((sum, l) => sum + l.finalPrice, 0);
 }

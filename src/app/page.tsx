@@ -22,8 +22,8 @@ export default function Home() {
               body: "Each closing gets its own page, tuned for SMS, DMs, and fast loads.",
             },
             {
-              title: "Verification",
-              body: "Closing docs mark deals as verified so your book stays credible.",
+              title: "Closing docs",
+              body: "Optional uploads — a small on-profile note when a statement is on file, without overstating proof.",
             },
           ].map((f) => (
             <li

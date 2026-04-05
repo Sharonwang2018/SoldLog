@@ -99,15 +99,15 @@ export default async function PublicAgentProfilePage({ params }: PageProps) {
           </p>
 
           <div className="mt-10 w-full max-w-md">
-            <div className="rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50/90 via-white to-stone-50/95 px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.04),0_12px_40px_-24px_rgba(0,0,0,0.12)] dark:border-amber-900/35 dark:from-amber-950/40 dark:via-stone-950 dark:to-stone-950 dark:shadow-[0_1px_0_rgba(255,255,255,0.04)] sm:px-8 sm:py-7">
-              <p className="text-center font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-200/90">
-                Verified volume
+            <div className="rounded-2xl border border-slate-200/90 bg-slate-50/80 px-6 py-6 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/50 sm:px-8 sm:py-7">
+              <p className="text-center font-sans text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Profile total
               </p>
               <p className="mt-3 text-center font-display text-4xl font-semibold tabular-nums tracking-tight text-slate-900 sm:text-5xl dark:text-slate-50">
                 {formatVerifiedVolumeShort(agent.verifiedVolumeUsd)}
               </p>
               <p className="mt-2 text-center font-sans text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                Sum of verified sale prices on SoldLog
+                Sum of prices for listings with a closing doc on file (informational).
               </p>
             </div>
           </div>
@@ -132,7 +132,8 @@ export default async function PublicAgentProfilePage({ params }: PageProps) {
               Recent closings
             </h2>
             <p className="mt-3 max-w-xl font-sans text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-              Verified sales carry the SoldLog seal. Open a card for the full story.
+              Listings with an uploaded closing statement show a small doc-on-file note — not a legal seal. Open a
+              card for the full story.
             </p>
           </div>
         </div>

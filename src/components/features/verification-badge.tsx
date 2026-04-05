@@ -1,4 +1,4 @@
-import { Shield } from "lucide-react";
+import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type VerificationBadgeProps = {
@@ -12,29 +12,45 @@ export function VerificationBadge({ className, variant = "default" }: Verificati
 
   return (
     <span
+      aria-label="Closing document on file with SoldLog — informational only, not a legal or third-party endorsement."
+      title="Closing document on file with SoldLog — informational only, not a legal or third-party endorsement."
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 shadow-md backdrop-blur-sm",
+        "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 backdrop-blur-sm",
         isDark
-          ? "border-amber-400/50 bg-slate-950/75 text-amber-50"
-          : "border-amber-300/60 bg-gradient-to-b from-amber-50/95 to-amber-100/90 text-slate-900 dark:border-amber-500/35 dark:from-slate-900/90 dark:to-slate-950/95 dark:text-amber-50",
+          ? "border-white/20 bg-black/50 text-white shadow-sm"
+          : "border-slate-200/95 bg-white/95 text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-900/90 dark:text-slate-200",
         className,
       )}
     >
       <span
         className={cn(
-          "relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-          "border border-amber-400/60 bg-gradient-to-b from-amber-200/90 to-amber-500/90 dark:from-amber-300/90 dark:to-amber-600/90",
-          "shadow-[0_0_14px_rgba(245,158,11,0.55),0_0_28px_rgba(245,158,11,0.25)]",
+          "relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border",
+          isDark
+            ? "border-white/25 bg-white/10"
+            : "border-slate-200 bg-slate-100 dark:border-slate-600 dark:bg-slate-800",
         )}
         aria-hidden
       >
-        <Shield className="h-4 w-4 text-amber-950 drop-shadow-sm dark:text-amber-950" strokeWidth={2.25} />
+        <FileText
+          className={cn("h-4 w-4", isDark ? "text-white/90" : "text-slate-600 dark:text-slate-300")}
+          strokeWidth={2.25}
+        />
       </span>
       <span className="flex flex-col leading-none">
-        <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-800/90 dark:text-amber-200/90">
-          Verified by
+        <span
+          className={cn(
+            "text-[9px] font-semibold uppercase tracking-[0.12em]",
+            isDark ? "text-white/70" : "text-slate-500 dark:text-slate-400",
+          )}
+        >
+          Doc on file
         </span>
-        <span className="mt-0.5 text-[11px] font-semibold tracking-tight text-slate-900 dark:text-amber-50">
+        <span
+          className={cn(
+            "mt-0.5 text-[11px] font-semibold tracking-tight",
+            isDark ? "text-white" : "text-slate-800 dark:text-slate-100",
+          )}
+        >
           SoldLog
         </span>
       </span>

@@ -89,12 +89,12 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Verification</CardTitle>
-            <CardDescription>Upload closing statements to unlock verified badges.</CardDescription>
+            <CardTitle className="text-base">Closing docs</CardTitle>
+            <CardDescription>Upload statements to show a doc-on-file note on public listings.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-stone-600 dark:text-stone-400">
-              2 of 3 demo listings verified. Complete uploads on each record.
+              2 of 3 demo listings show the note. Add or update uploads on each record.
             </p>
             <Button variant="outline" className="mt-3 w-full" asChild>
               <Link href="/dashboard/new">Add or edit record</Link>

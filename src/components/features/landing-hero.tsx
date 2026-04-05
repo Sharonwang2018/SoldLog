@@ -37,7 +37,7 @@ export function LandingHero() {
           transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto mt-6 max-w-xl text-pretty text-lg text-stone-600 dark:text-stone-400"
         >
-          SoldLog is the lightweight portfolio layer for US agents: verified sales, mobile-first
+          SoldLog is the lightweight portfolio layer for US agents: recent closings, mobile-first
           profiles, and share-ready stories — without building a full website.
         </motion.p>
 
