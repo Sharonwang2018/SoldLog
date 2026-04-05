@@ -3,10 +3,13 @@
 import { useCallback, useRef, useState } from "react";
 import { toBlob } from "html-to-image";
 import { ImageDown, Loader2 } from "lucide-react";
-import type { SoldListing } from "@/lib/types/public-profile";
+import { SoldPosterDom, posterThumbNeedsDecode, type PosterPayload } from "@/components/SoldPoster";
+import { posterDisplayAddressLine } from "@/lib/poster-address-privacy";
 import { posterCanvasSpec, resolvePosterLocale, type SupportedLocale } from "@/lib/i18n/locale";
-import { posterFontFamily, posterWordmarkFontFamily, soldStoryStrings } from "@/lib/i18n/sold-story-copy";
+import { soldStoryStrings } from "@/lib/i18n/sold-story-copy";
 import { cn } from "@/lib/utils";
+
+export type { PosterPayload } from "@/components/SoldPoster";
 
 function formatUsd(n: number) {
   return new Intl.NumberFormat("en-US", {
@@ -31,7 +34,7 @@ function waitForImage(img: HTMLImageElement | null) {
   if (img.complete && img.naturalWidth > 0) return Promise.resolve();
   return new Promise<void>((resolve, reject) => {
     img.onload = () => resolve();
-    img.onerror = () => reject(new Error("Property photo could not be loaded for the poster."));
+    img.onerror = () => reject(new Error("Poster image could not be loaded (check photo URL / CORS)."));
   });
 }
 
@@ -63,231 +66,12 @@ async function ensurePosterFonts(locale: SupportedLocale): Promise<void> {
   }
 }
 
-export type PosterPayload = Pick<
-  SoldListing,
-  "coverImageSrc" | "addressLine" | "cityState" | "finalPrice" | "daysOnMarket"
-> & {
-  agentDisplayName?: string | null;
-  language?: string | null;
-};
-
-function SoldPosterDom({
-  payload,
-  imgRef,
-  rootRef,
-  spec,
-  locale,
-}: {
-  payload: PosterPayload;
-  imgRef: React.RefObject<HTMLImageElement>;
-  rootRef: React.RefObject<HTMLDivElement>;
-  spec: ReturnType<typeof posterCanvasSpec>;
-  locale: SupportedLocale;
-}) {
-  const price = formatUsd(payload.finalPrice);
-  const copy = soldStoryStrings(locale);
-  const bodyFont = posterFontFamily(locale);
-  const brandFont = posterWordmarkFontFamily(locale);
-  const labelUpper = locale !== "zh";
-
-  return (
-    <div
-      ref={rootRef}
-      aria-hidden
-      style={{
-        width: spec.width,
-        height: spec.height,
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "#0c0a09",
-        overflow: "hidden",
-        fontFamily: bodyFont,
-      }}
-    >
-      <div style={{ position: "relative", height: spec.imageHeight, width: "100%", flexShrink: 0 }}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- canvas capture needs native img + CORS */}
-        <img
-          ref={imgRef}
-          src={payload.coverImageSrc}
-          alt=""
-          crossOrigin="anonymous"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to top, rgba(12,10,9,0.92) 0%, rgba(12,10,9,0.35) 42%, transparent 72%)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: 36,
-            right: 36,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "10px 18px",
-            borderRadius: 18,
-            backgroundColor: "rgba(12,10,9,0.55)",
-          }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 13,
-              background: "linear-gradient(145deg, #1c1917 0%, #292524 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fafaf9",
-              fontSize: 20,
-              fontWeight: 700,
-              letterSpacing: "-0.04em",
-              fontFamily: bodyFont,
-            }}
-          >
-            SL
-          </div>
-          <span
-            style={{
-              fontFamily: brandFont,
-              fontSize: locale === "zh" ? 30 : 32,
-              fontWeight: 600,
-              color: "#fafaf9",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            SoldLog
-          </span>
-        </div>
-      </div>
-
-      <div
-        style={{
-          flex: 1,
-          padding: locale === "zh" ? "40px 48px 48px" : "44px 52px 52px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          minHeight: 0,
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: locale === "zh" ? 28 : 32,
-            alignItems: "start",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                margin: 0,
-                fontSize: locale === "zh" ? 22 : 24,
-                fontWeight: 600,
-                letterSpacing: labelUpper ? "0.18em" : "0.08em",
-                textTransform: labelUpper ? "uppercase" : "none",
-                color: "#a8a29e",
-              }}
-            >
-              {copy.soldFor}
-            </p>
-            <p
-              style={{
-                margin: "12px 0 0",
-                fontSize: locale === "zh" ? 56 : 64,
-                fontWeight: 600,
-                color: "#fafaf9",
-                letterSpacing: "-0.03em",
-                lineHeight: 1.05,
-              }}
-            >
-              {price}
-            </p>
-          </div>
-          <div>
-            <p
-              style={{
-                margin: 0,
-                fontSize: locale === "zh" ? 22 : 24,
-                fontWeight: 600,
-                letterSpacing: labelUpper ? "0.18em" : "0.08em",
-                textTransform: labelUpper ? "uppercase" : "none",
-                color: "#a8a29e",
-              }}
-            >
-              {copy.daysOnMarket}
-            </p>
-            <p
-              style={{
-                margin: "12px 0 0",
-                fontSize: locale === "zh" ? 56 : 64,
-                fontWeight: 600,
-                color: "#fafaf9",
-                letterSpacing: "-0.02em",
-                lineHeight: 1.05,
-              }}
-            >
-              {payload.daysOnMarket}
-            </p>
-          </div>
-        </div>
-
-        <p
-          style={{
-            margin: "28px 0 0",
-            fontSize: locale === "zh" ? 34 : 38,
-            fontWeight: 600,
-            color: "#e7e5e4",
-            lineHeight: 1.28,
-            maxWidth: 980,
-          }}
-        >
-          {payload.addressLine}
-        </p>
-        <p
-          style={{
-            margin: "10px 0 0",
-            fontSize: locale === "zh" ? 26 : 28,
-            fontWeight: 500,
-            color: "#a8a29e",
-          }}
-        >
-          {payload.cityState}
-        </p>
-        {payload.agentDisplayName?.trim() ? (
-          <p
-            style={{
-              margin: "28px 0 0",
-              fontSize: locale === "zh" ? 24 : 24,
-              color: "#78716c",
-            }}
-          >
-            {copy.listedBy(payload.agentDisplayName.trim())}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
 export type GenerateSoldPosterButtonProps = {
   listing: PosterPayload;
   /** From Dashboard → Poster labels (EN / Chinese / match each sale). */
   agentPosterLabelsLocale?: string | null;
+  /** Profile accent mixed into hero gradient; listing photos are never full-bleed. */
+  accentHex?: string | null;
   className?: string;
   variant?: "default" | "compact";
 };
@@ -295,13 +79,14 @@ export type GenerateSoldPosterButtonProps = {
 export function GenerateSoldPosterButton({
   listing,
   agentPosterLabelsLocale,
+  accentHex,
   className,
   variant = "default",
 }: GenerateSoldPosterButtonProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const posterRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const listingImageRef = useRef<HTMLImageElement>(null);
 
   const locale = resolvePosterLocale(listing.language, agentPosterLabelsLocale);
   const spec = posterCanvasSpec(locale);
@@ -319,7 +104,9 @@ export function GenerateSoldPosterButton({
       if (locale !== "en") {
         await ensurePosterFonts(locale);
       }
-      await waitForImage(imgRef.current);
+      if (posterThumbNeedsDecode(listing)) {
+        await waitForImage(listingImageRef.current);
+      }
       await new Promise((r) => setTimeout(r, 120));
       const blob = await toBlob(node, {
         cacheBust: true,
@@ -333,7 +120,11 @@ export function GenerateSoldPosterButton({
       });
       if (!blob) throw new Error("Could not render poster.");
 
-      const filename = `soldlog-${slugifyFilePart(listing.addressLine)}-${spec.width}x${spec.height}.png`;
+      const lineForPoster = posterDisplayAddressLine(
+        listing.addressLine,
+        Boolean(listing.posterRedactStreetNumber),
+      );
+      const filename = `soldlog-${slugifyFilePart(lineForPoster)}-${spec.width}x${spec.height}.png`;
       const file = new File([blob], filename, { type: "image/png" });
 
       const canShareFiles =
@@ -346,7 +137,7 @@ export function GenerateSoldPosterButton({
         try {
           await navigator.share({
             files: [file],
-            title: listing.addressLine,
+            title: lineForPoster,
             text: `${formatUsd(listing.finalPrice)} · ${listing.cityState}`,
           });
         } catch (e) {
@@ -415,10 +206,11 @@ export function GenerateSoldPosterButton({
       >
         <SoldPosterDom
           rootRef={posterRef}
-          imgRef={imgRef}
+          listingImageRef={listingImageRef}
           payload={listing}
           spec={spec}
           locale={locale}
+          accentHex={accentHex}
         />
       </div>
     </>

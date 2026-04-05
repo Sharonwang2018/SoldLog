@@ -24,6 +24,10 @@ type SoldCardProps = {
   /** Brand color for the listing price (from profiles.accent_hex). */
   accentHex?: string;
   posterLabelsLocale?: string | null;
+  /** Strip leading house number on generated posters only (Settings → poster privacy). */
+  posterAddressPrivacy?: boolean;
+  /** Public profile photo — poster small image prefers this over listing cover. */
+  agentAvatarSrc?: string | null;
   listing: SoldListing;
   priority?: boolean;
   index?: number;
@@ -34,6 +38,8 @@ export function SoldCard({
   agentDisplayName,
   accentHex = "#0f172a",
   posterLabelsLocale,
+  posterAddressPrivacy = false,
+  agentAvatarSrc = null,
   listing,
   priority,
   index = 0,
@@ -129,14 +135,19 @@ export function SoldCard({
             variant="compact"
             className="mt-4"
             agentPosterLabelsLocale={posterLabelsLocale}
+            accentHex={accentHex}
             listing={{
               coverImageSrc: listing.coverImageSrc,
               addressLine: listing.addressLine,
               cityState: listing.cityState,
               finalPrice: listing.finalPrice,
               daysOnMarket: listing.daysOnMarket,
+              soldStory: listing.soldStory,
+              representedSide: listing.representedSide,
               agentDisplayName,
+              agentAvatarSrc,
               language: listing.language,
+              posterRedactStreetNumber: posterAddressPrivacy,
             }}
           />
         </div>

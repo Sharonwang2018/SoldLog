@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import {
   updateProfileIdentity,
   updateProfileLanguage,
+  updateProfilePosterAddressPrivacy,
   updateProfilePosterLabels,
 } from "@/app/dashboard/profile-actions";
 import { normalizeLocale, type SupportedLocale } from "@/lib/i18n/locale";
@@ -38,6 +39,7 @@ export default async function DashboardSettingsPage({
 }) {
   let currentLang: SupportedLocale = "en";
   let currentPosterLabels: "match" | "en" | "zh" = "match";
+  let currentPosterAddressPrivacy = false;
   let canPersist = false;
   let slug = "";
   let name = "";
@@ -56,13 +58,14 @@ export default async function DashboardSettingsPage({
       const { data } = await supabase
         .from("profiles")
         .select(
-          "language, poster_labels_locale, slug, name, title, brokerage, bio, accent_hex",
+          "language, poster_labels_locale, poster_address_privacy, slug, name, title, brokerage, bio, accent_hex",
         )
         .eq("id", user.id)
         .maybeSingle();
       currentLang = normalizeLocale(data?.language as string | null | undefined);
       const pl = (data?.poster_labels_locale as string | null | undefined)?.toLowerCase();
       currentPosterLabels = pl === "zh" ? "zh" : pl === "en" ? "en" : "match";
+      currentPosterAddressPrivacy = Boolean(data?.poster_address_privacy);
       slug = (data?.slug as string | undefined) ?? "";
       name = (data?.name as string | undefined) ?? "";
       title = (data?.title as string | null | undefined) ?? "";
@@ -157,30 +160,61 @@ export default async function DashboardSettingsPage({
         </CardHeader>
         <CardContent>
           {canPersist ? (
-            <form action={updateProfilePosterLabels} className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <div className="min-w-0 flex-1 space-y-2">
-                <label htmlFor="poster_labels_locale" className="text-sm font-medium text-stone-800 dark:text-stone-200">
-                  Poster language
+            <>
+              <form action={updateProfilePosterLabels} className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <label
+                    htmlFor="poster_labels_locale"
+                    className="text-sm font-medium text-stone-800 dark:text-stone-200"
+                  >
+                    Poster language
+                  </label>
+                  <select
+                    id="poster_labels_locale"
+                    name="poster_labels_locale"
+                    defaultValue={currentPosterLabels}
+                    className="flex h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm text-stone-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-50"
+                  >
+                    <option value="match">Match each sale</option>
+                    <option value="en">English (Instagram 1:1)</option>
+                    <option value="zh">Chinese (3:4 — WeChat / Xiaohongshu)</option>
+                  </select>
+                </div>
+                <Button type="submit" className="w-full sm:w-auto">
+                  Save poster setting
+                </Button>
+              </form>
+              <form
+                action={updateProfilePosterAddressPrivacy}
+                className="mt-6 space-y-3 border-t border-stone-200 pt-6 dark:border-stone-800"
+              >
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    name="poster_address_privacy"
+                    value="on"
+                    defaultChecked={currentPosterAddressPrivacy}
+                    className="mt-1 h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-400 dark:border-stone-600 dark:bg-stone-950 dark:focus:ring-stone-600"
+                  />
+                  <span className="font-sans text-sm leading-relaxed text-stone-700 dark:text-stone-300">
+                    <span className="font-semibold text-stone-900 dark:text-stone-100">Poster privacy</span>
+                    <span className="mt-1 block text-stone-500 dark:text-stone-400">
+                      On generated posters only, remove the leading house number from the street line (e.g. 32 Winterwind
+                      Ct → Winterwind Ct). Your city stays visible for community presence. The public profile and story
+                      pages are unchanged.
+                    </span>
+                  </span>
                 </label>
-                <select
-                  id="poster_labels_locale"
-                  name="poster_labels_locale"
-                  defaultValue={currentPosterLabels}
-                  className="flex h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm text-stone-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-50"
-                >
-                  <option value="match">Match each sale</option>
-                  <option value="en">English (Instagram 1:1)</option>
-                  <option value="zh">Chinese (3:4 — WeChat / Xiaohongshu)</option>
-                </select>
-              </div>
-              <Button type="submit" className="w-full sm:w-auto">
-                Save poster setting
-              </Button>
-            </form>
+                <Button type="submit" variant="secondary" size="sm">
+                  Save poster privacy
+                </Button>
+              </form>
+            </>
           ) : (
             <p className="text-sm text-stone-500 dark:text-stone-400">
-              Run the migration that adds <code className="rounded bg-stone-100 px-1 font-mono text-xs dark:bg-stone-900">poster_labels_locale</code>{" "}
-              to <code className="rounded bg-stone-100 px-1 font-mono text-xs dark:bg-stone-900">profiles</code>, then sign in.
+              Run migrations that add <code className="rounded bg-stone-100 px-1 font-mono text-xs dark:bg-stone-900">poster_labels_locale</code>{" "}
+              and <code className="rounded bg-stone-100 px-1 font-mono text-xs dark:bg-stone-900">poster_address_privacy</code> to{" "}
+              <code className="rounded bg-stone-100 px-1 font-mono text-xs dark:bg-stone-900">profiles</code>, then sign in.
             </p>
           )}
         </CardContent>

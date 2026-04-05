@@ -14,6 +14,8 @@ export type SoldListing = {
   soldStory?: string | null;
   /** Public display locale (labels, poster, formatting) */
   language?: string;
+  /** Buyer / Seller / Both — from `sold_records.represented_side` */
+  representedSide?: string | null;
 };
 
 export type AgentPublicProfile = {
@@ -34,5 +36,7 @@ export type AgentPublicProfile = {
   language?: string;
   /** null = poster labels follow each sale's language; en | zh = force poster locale */
   posterLabelsLocale?: string | null;
+  /** When true, posters strip leading street numbers from the address line (city/state unchanged). */
+  posterAddressPrivacy?: boolean;
   soldListings: SoldListing[];
 };

@@ -45,8 +45,8 @@ export function GenerateSoldStoryButton({ recordId, className, variant = "outlin
       const data = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean };
       if (!res.ok) {
         const msg = data.error || `Request failed (${res.status})`;
-        if (/GOOGLE_GENERATIVE_AI_API_KEY|GEMINI_API_KEY|API key|not set/i.test(msg)) {
-          throw new Error("Add GOOGLE_GENERATIVE_AI_API_KEY to .env.local on the server.");
+        if (/GROQ_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GEMINI_API_KEY|OPENAI_API_KEY|API key|not set/i.test(msg)) {
+          throw new Error("Add GROQ_API_KEY (or another configured LLM key) to .env.local on the server.");
         }
         throw new Error(msg);
       }

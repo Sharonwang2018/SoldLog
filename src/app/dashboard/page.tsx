@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GenerateSoldStoryButton } from "@/components/features/generate-sold-story-button";
+import { DashboardClosingRow } from "@/components/features/dashboard-closing-row";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseServerConfigured } from "@/lib/supabase/env";
 
@@ -101,6 +101,22 @@ export default async function DashboardPage() {
             </Button>
           </CardContent>
         </Card>
+        <Card className="sm:col-span-2">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Wrench className="h-4 w-4 text-stone-500" aria-hidden />
+              <CardTitle className="text-base">Tools</CardTitle>
+            </div>
+            <CardDescription>
+              Closing stats by month and city, listing promo from screenshots — separate from your sold-record archive.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="secondary" className="w-full sm:w-auto" asChild>
+              <Link href="/dashboard/tools">Open tools</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {publicSlug && closings.length > 0 ? (
@@ -112,41 +128,17 @@ export default async function DashboardPage() {
             {closings.map((r) => {
               const line = [r.address, r.city_state].filter(Boolean).join(", ");
               return (
-                <li
+                <DashboardClosingRow
                   key={r.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-950 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-stone-900 dark:text-stone-100">{line || r.slug}</p>
-                    <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-                      {r.sold_story?.trim() ? (
-                        <span className="line-clamp-2">{r.sold_story.trim()}</span>
-                      ) : (
-                        <span className="italic">No sold story yet</span>
-                      )}
-                    </p>
-                    <Link
-                      href={`/${publicSlug}/${r.slug}`}
-                      className="mt-2 inline-block text-sm font-medium text-stone-700 underline-offset-4 hover:underline dark:text-stone-300"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View public page
-                    </Link>
-                  </div>
-                  <GenerateSoldStoryButton recordId={r.id} className="shrink-0 sm:pl-4" />
-                </li>
+                  recordId={r.id}
+                  headline={line || r.slug}
+                  recordSlug={r.slug}
+                  publicSlug={publicSlug}
+                  soldStory={r.sold_story}
+                />
               );
             })}
           </ul>
-          <p className="text-xs text-stone-500 dark:text-stone-400">
-            AI story uses this closing&apos;s address, price, days on market, and represented side. Set{" "}
-            <code className="rounded bg-stone-100 px-1 font-mono dark:bg-stone-900">GOOGLE_GENERATIVE_AI_API_KEY</code>{" "}
-            (Gemini) or{" "}
-            <code className="rounded bg-stone-100 px-1 font-mono dark:bg-stone-900">OPENAI_API_KEY</code> in{" "}
-            <code className="rounded bg-stone-100 px-1 font-mono dark:bg-stone-900">.env.local</code> only — do not
-            hardcode keys, commit them, or call AI from the browser.
-          </p>
         </section>
       ) : null}
     </div>

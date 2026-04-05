@@ -144,14 +144,19 @@ export default async function SoldStoryPage({ params }: PageProps) {
         <div className="mt-12 flex flex-col gap-3 sm:max-w-md">
           <GenerateSoldPosterButton
             agentPosterLabelsLocale={agent.posterLabelsLocale}
+            accentHex={agent.accentHex}
             listing={{
               coverImageSrc: listing.coverImageSrc,
               addressLine: listing.addressLine,
               cityState: listing.cityState,
               finalPrice: listing.finalPrice,
               daysOnMarket: listing.daysOnMarket,
+              soldStory: listing.soldStory,
+              representedSide: listing.representedSide,
               agentDisplayName: agent.displayName,
+              agentAvatarSrc: agent.avatarSrc,
               language: listing.language,
+              posterRedactStreetNumber: agent.posterAddressPrivacy,
             }}
           />
           <Link

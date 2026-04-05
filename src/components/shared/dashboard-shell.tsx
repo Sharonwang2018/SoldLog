@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { LayoutDashboard, Menu, PlusCircle, Settings, X } from "lucide-react";
+import { LayoutDashboard, Menu, PlusCircle, Settings, Wrench, X } from "lucide-react";
 import { signOut } from "@/app/dashboard/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/new", label: "New sale", icon: PlusCircle },
+  { href: "/dashboard/tools", label: "Tools", icon: Wrench },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -32,7 +33,10 @@ export function DashboardShell({
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <nav className="flex flex-col gap-1 p-3">
       {nav.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+        const active =
+          pathname === href ||
+          (href !== "/dashboard" && href !== "/dashboard/tools" && pathname.startsWith(href)) ||
+          (href === "/dashboard/tools" && pathname.startsWith("/dashboard/tools"));
         return (
           <Link
             key={href}

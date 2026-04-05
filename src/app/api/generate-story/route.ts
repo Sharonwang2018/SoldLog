@@ -1,7 +1,7 @@
 /**
- * AI sold story — server-only via `@google/generative-ai` (default model `gemini-2.0-flash`).
- * Keys in `.env.local`: `GOOGLE_GENERATIVE_AI_API_KEY` or legacy `GEMINI_API_KEY`; optional `GOOGLE_GENERATIVE_AI_MODEL`.
- * Never call Google from the browser — keys must not ship to clients.
+ * AI sold story — server-only. Default provider: Groq (`GROQ_API_KEY`, OpenAI-compatible API).
+ * Optional fallbacks: Gemini (`GOOGLE_GENERATIVE_AI_API_KEY` / `GEMINI_*`), OpenAI (`OPENAI_API_KEY`).
+ * Never call LLM providers from the browser — keys must not ship to clients.
  */
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
@@ -47,14 +47,19 @@ function mapGenerateStoryError(rawMessage: string): { status: number; error: str
     return {
       status: 429,
       error:
-        "The AI service is temporarily busy (rate limit). Please wait a minute and try again. 当前使用人数较多或已达免费配额上限，请稍后再试。详见 https://ai.google.dev/gemini-api/docs/rate-limits",
+        "The AI service is temporarily busy (rate limit). Please wait a minute and try again. 当前使用人数较多或已达配额上限，请稍后再试。说明见 Groq: https://console.groq.com/docs/rate-limits · Gemini: https://ai.google.dev/gemini-api/docs/rate-limits",
     };
   }
-  if (m.includes("api_key_invalid") || m.includes("api key expired")) {
+  if (
+    m.includes("api_key_invalid") ||
+    m.includes("invalid api key") ||
+    m.includes("incorrect api key") ||
+    m.includes("api key expired")
+  ) {
     return {
       status: 401,
       error:
-        "AI API key is invalid or expired. Renew GOOGLE_GENERATIVE_AI_API_KEY in .env.local. 请更新服务端 Google API Key。",
+        "AI API key is invalid or expired. Check GROQ_API_KEY (or your configured provider key) in .env.local. 请检查服务端 LLM API Key（如 GROQ_API_KEY）。",
     };
   }
   return {
@@ -126,7 +131,7 @@ function collectDraftPropertyImageUrls(draft: DraftPayload, userId: string): str
  * 2) `{ draft: { …, property_image_urls?: string[] } }` — no save;
  *    uses `profiles.language` for output locale (Chinese / English / etc.).
  *
- * Env: GOOGLE_GENERATIVE_AI_API_KEY (or GEMINI_API_KEY), optional GOOGLE_GENERATIVE_AI_MODEL; or OPENAI_API_KEY.
+ * Env: GROQ_API_KEY (primary); or GOOGLE_GENERATIVE_AI_API_KEY / GEMINI_*; or OPENAI_API_KEY.
  */
 export async function POST(request: Request) {
   if (!isSupabaseServerConfigured()) {

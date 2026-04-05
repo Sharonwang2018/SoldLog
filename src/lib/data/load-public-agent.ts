@@ -20,7 +20,38 @@ type ProfileRow = {
   language?: string | null;
   poster_labels_locale?: string | null;
   accent_hex?: string | null;
+  poster_address_privacy?: boolean | null;
 };
+
+/** Columns that exist on all migrated DBs; keep separate from optional `poster_address_privacy` so a missing column does not 404 the whole public site. */
+const PROFILE_CORE_SELECT =
+  "id, name, title, brokerage, bio, photo_url, slug, contact_href, language, poster_labels_locale, accent_hex";
+
+async function loadProfileRowBySlug(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  slug: string,
+): Promise<ProfileRow | null> {
+  const { data: profile, error: pe } = await supabase
+    .from("profiles")
+    .select(PROFILE_CORE_SELECT)
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (pe || !profile) return null;
+
+  const { data: privacy, error: privacyErr } = await supabase
+    .from("profiles")
+    .select("poster_address_privacy")
+    .eq("id", profile.id)
+    .maybeSingle();
+
+  const poster_address_privacy =
+    !privacyErr && privacy && typeof privacy.poster_address_privacy === "boolean"
+      ? privacy.poster_address_privacy
+      : null;
+
+  return { ...(profile as ProfileRow), poster_address_privacy };
+}
 
 type SoldRecordRow = {
   slug: string;
@@ -34,6 +65,7 @@ type SoldRecordRow = {
   created_at: string;
   sold_story?: string | null;
   language?: string | null;
+  represented_side?: string | null;
 };
 
 function mapListing(r: SoldRecordRow): SoldListing {
@@ -52,6 +84,7 @@ function mapListing(r: SoldRecordRow): SoldListing {
     verified: r.is_verified,
     soldStory: r.sold_story ?? undefined,
     language: r.language ?? "en",
+    representedSide: r.represented_side?.trim() || undefined,
   };
 }
 
@@ -69,6 +102,7 @@ function mapAgent(p: ProfileRow, listings: SoldListing[]): AgentPublicProfile {
     verifiedVolumeUsd: sumVerifiedVolumeUsd(listings),
     language: p.language ?? "en",
     posterLabelsLocale: p.poster_labels_locale ?? null,
+    posterAddressPrivacy: Boolean(p.poster_address_privacy),
     soldListings: listings,
   };
 }
@@ -78,20 +112,13 @@ export async function loadPublicAgentFromDb(slug: string): Promise<AgentPublicPr
 
   const supabase = createServerSupabaseClient();
 
-  const { data: profile, error: pe } = await supabase
-    .from("profiles")
-    .select(
-      "id, name, title, brokerage, bio, photo_url, slug, contact_href, language, poster_labels_locale, accent_hex",
-    )
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (pe || !profile) return null;
+  const profile = await loadProfileRowBySlug(supabase, slug);
+  if (!profile) return null;
 
   const { data: records, error: re } = await supabase
     .from("sold_records")
     .select(
-      "slug, address, city_state, price, days_on_market, property_image_url, is_verified, closed_at, created_at, sold_story, language",
+      "slug, address, city_state, price, days_on_market, property_image_url, is_verified, closed_at, created_at, sold_story, language, represented_side",
     )
     .eq("agent_id", profile.id)
     .order("created_at", { ascending: false });
@@ -109,20 +136,13 @@ export async function loadSoldRecordFromDb(
 
   const supabase = createServerSupabaseClient();
 
-  const { data: profile, error: pe } = await supabase
-    .from("profiles")
-    .select(
-      "id, name, title, brokerage, bio, photo_url, slug, contact_href, language, poster_labels_locale, accent_hex",
-    )
-    .eq("slug", agentSlug)
-    .maybeSingle();
-
-  if (pe || !profile) return null;
+  const profile = await loadProfileRowBySlug(supabase, agentSlug);
+  if (!profile) return null;
 
   const { data: r, error: re } = await supabase
     .from("sold_records")
     .select(
-      "slug, address, city_state, price, days_on_market, property_image_url, is_verified, closed_at, created_at, sold_story, language",
+      "slug, address, city_state, price, days_on_market, property_image_url, is_verified, closed_at, created_at, sold_story, language, represented_side",
     )
     .eq("agent_id", profile.id)
     .eq("slug", recordSlug)

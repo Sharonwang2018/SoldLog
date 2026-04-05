@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 /**
  * App routes: overview lives at `/dashboard` (there is no `/dashboard/records`).
  * Prereqs: `auth-setup` (E2E_TEST_EMAIL / E2E_TEST_PASSWORD), Supabase configured,
- * `GOOGLE_GENERATIVE_AI_API_KEY` in `.env.local` for the dev server (AI step).
+ * `GROQ_API_KEY` (or Gemini / OpenAI key) in `.env.local` for the dev server (AI step).
  */
 
 const TEST_ADDRESS = "123 AI Test Street, San Ramon, CA";
@@ -34,11 +34,7 @@ function readEnvLocalValue(key: string): string | undefined {
 }
 
 function hasLlmKeyForE2E(): boolean {
-  for (const key of [
-    "GOOGLE_GENERATIVE_AI_API_KEY",
-    "GEMINI_API_KEY",
-    "OPENAI_API_KEY",
-  ] as const) {
+  for (const key of ["GROQ_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY"] as const) {
     if (process.env[key]?.trim()) return true;
     if (readEnvLocalValue(key)?.trim()) return true;
   }
@@ -46,7 +42,7 @@ function hasLlmKeyForE2E(): boolean {
 }
 
 /**
- * Gemini free tier often returns 429; wait longer per attempt and retry with backoff.
+ * LLM providers (Groq, Gemini, etc.) may return 429; wait longer per attempt and retry with backoff.
  */
 async function clickAiGenerateUntilStoryFilled(
   page: Page,
@@ -82,7 +78,7 @@ async function clickAiGenerateUntilStoryFilled(
           timeout: 45_000,
           intervals: [100, 250, 500, 1000, 2000],
         })
-        .toBeGreaterThanOrEqual(15);
+        .toBeGreaterThanOrEqual(80);
       return;
     }
 
@@ -133,7 +129,7 @@ test.describe("sold record creation + AI sold story", () => {
     );
     test.skip(
       !hasLlmKeyForE2E(),
-      "No LLM key in process.env or .env.local — add GOOGLE_GENERATIVE_AI_API_KEY (or GEMINI_API_KEY / OPENAI_API_KEY) so /api/generate-story can run.",
+      "No LLM key in process.env or .env.local — add GROQ_API_KEY (or GOOGLE_GENERATIVE_AI_API_KEY / GEMINI_API_KEY / OPENAI_API_KEY) so /api/generate-story can run.",
     );
 
     test.setTimeout(420_000);
@@ -170,7 +166,7 @@ test.describe("sold record creation + AI sold story", () => {
 
       const value = (await story.inputValue()).trim();
       // 真实模型不会固定输出「AI 生成文案」；断言为「由空变为有实质内容的成交故事」。
-      expect(value.length).toBeGreaterThanOrEqual(15);
+      expect(value.length).toBeGreaterThanOrEqual(80);
     });
 
     await test.step("Submit and land on dashboard list with new address", async () => {

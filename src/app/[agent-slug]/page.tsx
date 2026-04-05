@@ -148,6 +148,8 @@ export default async function PublicAgentProfilePage({ params }: PageProps) {
                 agentDisplayName={agent.displayName}
                 accentHex={agent.accentHex}
                 posterLabelsLocale={agent.posterLabelsLocale}
+                posterAddressPrivacy={agent.posterAddressPrivacy}
+                agentAvatarSrc={agent.avatarSrc}
                 listing={listing}
                 priority={i < 2}
                 index={i}

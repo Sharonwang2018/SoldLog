@@ -68,6 +68,48 @@ export async function updateProfilePosterLabels(formData: FormData): Promise<voi
   revalidatePath("/", "layout");
 }
 
+/** Poster-only: omit leading street number on exported images; city/state line unchanged. */
+export async function updateProfilePosterAddressPrivacy(formData: FormData): Promise<void> {
+  if (!isSupabaseServerConfigured()) {
+    return;
+  }
+
+  const poster_address_privacy = formData.get("poster_address_privacy") === "on";
+
+  const supabase = createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  const { data: profile } = await supabase.from("profiles").select("slug").eq("id", user.id).maybeSingle();
+  const agentSlug = profile?.slug as string | undefined;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ poster_address_privacy })
+    .eq("id", user.id);
+
+  if (error) {
+    return;
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+  if (agentSlug) {
+    revalidatePath(`/${agentSlug}`);
+    const { data: records } = await supabase.from("sold_records").select("slug").eq("agent_id", user.id);
+    for (const row of records ?? []) {
+      const s = row.slug as string | undefined;
+      if (s) revalidatePath(`/${agentSlug}/${s}`);
+    }
+  }
+  revalidatePath("/", "layout");
+}
+
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function identityErrorRedirect(message: string): never {

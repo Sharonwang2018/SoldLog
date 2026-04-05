@@ -11,6 +11,58 @@ export type CreateSoldRecordResult =
   | { ok: true; agentSlug: string; recordSlug: string }
   | { ok: false; error: string };
 
+export type UpdateSoldStoryResult = { ok: true } | { ok: false; error: string };
+
+/** Owner-only: update public sold story copy from the dashboard list. */
+export async function updateSoldRecordStory(recordId: string, soldStory: string): Promise<UpdateSoldStoryResult> {
+  if (!isSupabaseServerConfigured()) {
+    return { ok: false, error: "Supabase is not configured." };
+  }
+
+  const supabase = createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, error: "Please sign in." };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("slug")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError || !profile?.slug) {
+    return { ok: false, error: "Profile not found." };
+  }
+
+  const agentSlug = profile.slug as string;
+  const trimmed = soldStory.trim();
+  const value = trimmed.length > 0 ? trimmed : null;
+
+  const { data: row, error: upErr } = await supabase
+    .from("sold_records")
+    .update({ sold_story: value })
+    .eq("id", recordId)
+    .eq("agent_id", user.id)
+    .select("slug")
+    .maybeSingle();
+
+  if (upErr) {
+    return { ok: false, error: upErr.message };
+  }
+  if (!row?.slug) {
+    return { ok: false, error: "Record not found or you don’t have access." };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${agentSlug}`);
+  revalidatePath(`/${agentSlug}/${row.slug}`);
+  return { ok: true };
+}
+
 function parsePrice(raw: string): number | null {
   const n = Number.parseInt(raw.replace(/[^0-9]/g, ""), 10);
   if (Number.isNaN(n) || n < 0) return null;
