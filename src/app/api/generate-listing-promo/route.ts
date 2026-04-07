@@ -6,11 +6,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseServerConfigured } from "@/lib/supabase/env";
 import { normalizeLocale } from "@/lib/i18n/locale";
 import { generateListingPromoPosterCopy } from "@/lib/ai/listing-promo-llm";
+import { MAX_LISTING_PROMO_IMAGE_BYTES } from "@/lib/constants/listing-promo-upload";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 90;
-
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 function mapError(rawMessage: string): { status: number; error: string } {
   const m = rawMessage.toLowerCase();
@@ -86,9 +85,11 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "image_base64 is not valid base64." }, { status: 400 });
   }
-  if (buf.byteLength > MAX_IMAGE_BYTES || buf.byteLength < 256) {
+  if (buf.byteLength > MAX_LISTING_PROMO_IMAGE_BYTES || buf.byteLength < 256) {
     return NextResponse.json(
-      { error: `Image must be between 256 bytes and ${MAX_IMAGE_BYTES} bytes.` },
+      {
+        error: `Image must be between 256 bytes and ${MAX_LISTING_PROMO_IMAGE_BYTES} bytes (about 2.5 MB) so the request fits platform limits.`,
+      },
       { status: 400 },
     );
   }

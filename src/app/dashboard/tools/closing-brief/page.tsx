@@ -4,10 +4,8 @@ import { ClosingBriefTool } from "@/components/features/closing-brief-tool";
 import { Button } from "@/components/ui/button";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseServerConfigured } from "@/lib/supabase/env";
-import { normalizeLocale, type SupportedLocale } from "@/lib/i18n/locale";
 
 export default async function ClosingBriefToolPage() {
-  let defaultLocale: SupportedLocale = "en";
   let agentDisplayName = "";
 
   if (isSupabaseServerConfigured()) {
@@ -18,10 +16,9 @@ export default async function ClosingBriefToolPage() {
     if (user) {
       const { data } = await supabase
         .from("profiles")
-        .select("language, name")
+        .select("name")
         .eq("id", user.id)
         .maybeSingle();
-      defaultLocale = normalizeLocale(data?.language as string | null | undefined);
       agentDisplayName = (data?.name as string | undefined)?.trim() ?? "";
     }
   }
@@ -41,7 +38,7 @@ export default async function ClosingBriefToolPage() {
         </p>
       </div>
 
-      <ClosingBriefTool defaultLocale={defaultLocale} agentDisplayName={agentDisplayName} />
+      <ClosingBriefTool agentDisplayName={agentDisplayName} />
     </div>
   );
 }

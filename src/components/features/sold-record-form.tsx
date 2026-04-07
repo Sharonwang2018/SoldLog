@@ -346,7 +346,7 @@ export function SoldRecordForm({ preferredLanguage = "en" }: SoldRecordFormProps
   const extractLastStartRef = useRef(0);
   const soldStoryTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const strings = aiUiStrings(agentLocale);
+  const strings = aiUiStrings("en");
 
   const priceDisplay =
     priceDigits === ""

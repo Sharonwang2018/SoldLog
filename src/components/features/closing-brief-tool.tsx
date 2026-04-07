@@ -13,7 +13,7 @@ import {
 } from "@/lib/closing-stats";
 
 const LANG_OPTIONS: { value: SupportedLocale | ""; label: string }[] = [
-  { value: "", label: "Use my profile language" },
+  { value: "", label: "English (default)" },
   { value: "en", label: "English" },
   { value: "zh", label: "Chinese (Simplified)" },
   { value: "ru", label: "Русский" },
@@ -30,11 +30,10 @@ function ytdDefaultRange(): { from: string; to: string } {
 }
 
 type ClosingBriefToolProps = {
-  defaultLocale: SupportedLocale;
   agentDisplayName: string;
 };
 
-export function ClosingBriefTool({ defaultLocale, agentDisplayName }: ClosingBriefToolProps) {
+export function ClosingBriefTool({ agentDisplayName }: ClosingBriefToolProps) {
   const initial = useMemo(() => ytdDefaultRange(), []);
   const [fromMonth, setFromMonth] = useState(initial.from);
   const [toMonth, setToMonth] = useState(initial.to);
@@ -44,7 +43,7 @@ export function ClosingBriefTool({ defaultLocale, agentDisplayName }: ClosingBri
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const effectiveLocale = language || defaultLocale;
+  const effectiveLocale = language || "en";
 
   const load = useCallback(async () => {
     setError(null);
@@ -92,17 +91,13 @@ export function ClosingBriefTool({ defaultLocale, agentDisplayName }: ClosingBri
     }
   }, [shareText]);
 
-  const hintZh = effectiveLocale === "zh";
-
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Date range</CardTitle>
           <CardDescription>
-            {hintZh
-              ? "按成交日统计：优先使用每条记录的 Closing date；未填写则用创建日。"
-              : "Stats use each record’s closing date when set; otherwise the record creation date."}
+            Stats use each record&apos;s closing date when set; otherwise the record creation date.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">

@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { SupportedLocale } from "@/lib/i18n/locale";
-
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+import { MAX_LISTING_PROMO_IMAGE_BYTES } from "@/lib/constants/listing-promo-upload";
+import { parseApiJsonResponse } from "@/lib/safe-response-json";
 const FETCH_TIMEOUT_MS = 90_000;
 
 const LANG_OPTIONS: { value: SupportedLocale | ""; label: string }[] = [
@@ -20,7 +20,7 @@ const LANG_OPTIONS: { value: SupportedLocale | ""; label: string }[] = [
 ];
 
 function fileToPayload(file: File): Promise<{ mime_type: string; image_base64: string }> {
-  if (file.size > MAX_IMAGE_BYTES) {
+  if (file.size > MAX_LISTING_PROMO_IMAGE_BYTES) {
     return Promise.reject(new Error("MAX_SIZE"));
   }
   return new Promise((resolve, reject) => {
@@ -99,7 +99,7 @@ export function ListingPromoTool({ defaultLanguage }: ListingPromoToolProps) {
           body: JSON.stringify(payload),
           signal: ac.signal,
         });
-        const data = (await res.json()) as { error?: string; promo_text?: string };
+        const data = await parseApiJsonResponse<{ error?: string; promo_text?: string }>(res);
         if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
         const text = typeof data.promo_text === "string" ? data.promo_text.trim() : "";
         if (!text) throw new Error("Empty response from AI.");
@@ -108,8 +108,15 @@ export function ListingPromoTool({ defaultLanguage }: ListingPromoToolProps) {
         clearTimeout(tid);
       }
     } catch (e) {
-      if ((e as Error)?.message === "MAX_SIZE") {
-        setError(`Image must be under ${MAX_IMAGE_BYTES / (1024 * 1024)} MB.`);
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("did not match the expected pattern")) {
+        setError(
+          "Upload or response was rejected. Try a smaller screenshot (under ~2.5 MB) or try again in a moment.",
+        );
+      } else if ((e as Error)?.message === "MAX_SIZE") {
+        setError(
+          `Screenshot must be under ${(MAX_LISTING_PROMO_IMAGE_BYTES / (1024 * 1024)).toFixed(1)} MB (platform limit for uploads). Crop or compress and try again.`,
+        );
       } else if (e instanceof DOMException && e.name === "AbortError") {
         setError("Request timed out — try a smaller image or again later.");
       } else {
@@ -150,6 +157,10 @@ export function ListingPromoTool({ defaultLanguage }: ListingPromoToolProps) {
             <label htmlFor="listing-promo-file" className="text-sm font-medium text-stone-800 dark:text-stone-200">
               Screenshot
             </label>
+            <p className="text-xs text-stone-500 dark:text-stone-400">
+              Max ~{(MAX_LISTING_PROMO_IMAGE_BYTES / (1024 * 1024)).toFixed(1)} MB — larger files may fail on mobile
+              hosting limits.
+            </p>
             <Input
               id="listing-promo-file"
               type="file"
